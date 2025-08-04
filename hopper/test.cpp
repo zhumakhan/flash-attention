@@ -7,7 +7,7 @@
 
 int main(){
     int batch_size = 1;
-    int seqlen_q = 512;
+    int seqlen_q = 73920;
     int seqlen_k = 256;
     int heads = 40;
     int dim = 128;
