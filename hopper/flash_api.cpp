@@ -82,7 +82,7 @@ void set_params_fprop(Flash_fwd_params &params,
     params.d_rounded = head_size_rounded;
 
     // Set the different scale values.
-    params.scale_softmax = 1.0;
+    params.scale_softmax = 1.0 / sqrt(double(d));
     params.softcap = 0.0;
 
     // Set this to probability of keeping an element to simplify things.
