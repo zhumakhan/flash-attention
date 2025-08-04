@@ -46,9 +46,9 @@ void set_params_fprop(Flash_fwd_params &params,
     params.k_ptr = k;
     params.v_ptr = v;
     // All stride are in elements, not bytes.
-    params.q_row_stride = seqlen_q * d;
-    params.k_row_stride = seqlen_k * d;
-    params.v_row_stride = seqlen_k * d;
+    params.q_row_stride = h * d;
+    params.k_row_stride = h * d;
+    params.v_row_stride = h * d;
     params.q_head_stride = d;
     params.k_head_stride = d;
     params.v_head_stride = d;
