@@ -3,10 +3,6 @@ import torch
 import traceback
 from copy import deepcopy
 import nvtx
-try:
-    from sageattention import sageattn_qk_int8_pv_fp8_cuda_sm90
-except:
-    from sageattention import sageattn as sageattn_qk_int8_pv_fp8_cuda_sm90
 
 
 try:
@@ -115,7 +111,7 @@ def flash_attention(
             max_seqlen_k=lk,
             softmax_scale=softmax_scale,
             causal=causal,
-            deterministic=deterministic)
+            deterministic=deterministic)[0].unflatten(0, (b, lq))
     else:
         assert FLASH_ATTN_2_AVAILABLE
         x = flash_attn.flash_attn_varlen_func(
@@ -137,7 +133,6 @@ def flash_attention(
     # output
     return x.type(out_dtype)
 
-from spas_sage_attn import spas_sage2_attn_meansim_cuda
 
 def attention(
     q,
@@ -161,27 +156,6 @@ def attention(
     
     # out = spas_sage2_attn_meansim_cuda(q, k, v, simthreshd1=0.6, cdfthreshd=0.98, is_causal=False)
     # return out.transpose(1, 2).contiguous()
-
-    if use_sage:
-        attn_mask = None
-
-        q = q.transpose(1, 2).to(dtype)
-        k = k.transpose(1, 2).to(dtype)
-        v = v.transpose(1, 2).to(dtype)
-
-        out = sageattn_qk_int8_pv_fp8_cuda_sm90(
-            q, 
-            k, 
-            v,
-            tensor_layout="HND",
-            is_causal=causal,
-            sm_scale=None,
-            return_lse=False,
-            pv_accum_dtype="fp32+fp32"
-        )
-
-        out = out.transpose(1, 2).contiguous()
-        return out
 
     if FLASH_ATTN_2_AVAILABLE or FLASH_ATTN_3_AVAILABLE:
         return flash_attention(
@@ -225,7 +199,6 @@ shapes = [
     # ([1, 40, 73920, 128], [1, 40, 73920, 128], [1, 40, 73920, 128]),
     # ([1, 16, 257, 80], [1, 16, 257, 80], [1, 16, 257, 80]),
     ([1, 40, 73920, 128], [1, 40, 512, 128], [1, 40, 512, 128])
-    # ([1, 73920, 40, 128], [1, 512, 40, 128], [1, 512, 40, 128])
 ]
 def run_attention(use_sage, fa_version):
     for shape in shapes:
@@ -234,16 +207,15 @@ def run_attention(use_sage, fa_version):
         k_shape[1], k_shape[2] = k_shape[2], k_shape[1]
         v_shape[1], v_shape[2] = v_shape[2], v_shape[1]
 
-        q = torch.randn(q_shape, device='cuda', dtype=torch.float16)
-        k = torch.randn(k_shape, device='cuda', dtype=torch.float16)
-        v = torch.randn(v_shape, device='cuda', dtype=torch.float16)
+        q = torch.randn(q_shape, device='cuda', dtype=torch.bfloat16)
+        k = torch.randn(k_shape, device='cuda', dtype=torch.bfloat16)
+        v = torch.randn(v_shape, device='cuda', dtype=torch.bfloat16)
         # if not use_sage:
         #     q.to(torch.float8_e4m3fn)
         #     k.to(torch.float8_e4m3fn)
         #     v.to(torch.float8_e4m3fn)
         try:
-            # attention(q,k,v, use_sage=use_sage, dtype=torch.float8_e4m3fn if not use_sage else torch.float16, fa_version=fa_version)
-            attention(q,k,v, use_sage=use_sage, dtype=torch.float16, fa_version=fa_version)
+            attention(q,k,v, use_sage=use_sage, dtype=torch.float8_e4m3fn if not use_sage else torch.float16, fa_version=fa_version)
         except Exception as e:
             traceback.print_exc()
             print('Error: ',e)
@@ -251,5 +223,5 @@ def run_attention(use_sage, fa_version):
             print(use_sage)
             print(q_shape, k_shape, v_shape)
 
-# run_attention(True, 3)
-run_attention(False, 3)
+run_attention(True, 3)
+# run_attention(False, 3)

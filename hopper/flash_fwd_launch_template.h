@@ -176,6 +176,20 @@ void run_flash_fwd(Flash_fwd_params &params, cudaStream_t stream) {
     int smem_size_v = sizeof(decltype((typename CollectiveMainloop::TensorStorage{}).smem_v));
     printf("smem_size = %d, q = %d, k = %d, v = %d\n", smem_size, smem_size_q, smem_size_k, smem_size_v);
 
+    print(scheduler_args.num_blocks);
+    print(scheduler_args.num_head);
+    print(scheduler_args.num_batch);
+    print(scheduler_args.num_splits);
+    print(scheduler_args.qhead_per_khead);
+    print(scheduler_args.seqlen);
+    print(scheduler_args.seqlen_k);
+    print(scheduler_args.headdim);
+    print(scheduler_args.headdim_v);
+    print(scheduler_args.element_size);
+    printf("\ntile_count_semaphore is null:\n %d", scheduler_args.tile_count_semaphore == nullptr);
+    printf("\ncu_seqlens is null:\n %d", scheduler_args.cu_seqlens == nullptr);
+    printf("\nseqused:\n %d", scheduler_args.seqused == nullptr);
+    printf("\nnum_splits_dynamic_ptr:\n %d", scheduler_args.num_splits_dynamic_ptr == nullptr);
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,10 +202,7 @@ void run_flash_fwd(Flash_fwd_params &params, cudaStream_t stream) {
             CHECK_CUDA(cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, smem_size));
         }
         dim3 cluster_dims(size<0>(ClusterShape{}), size<1>(ClusterShape{}), size<2>(ClusterShape{}));
-        printf("\n(%d %d %d) : (%d %d %d) : (%d %d %d), smem: %d\n", cluster_dims.x, cluster_dims.y, cluster_dims.z, grid_dims.x, grid_dims.y, grid_dims.z, block_dims.x, block_dims.y, block_dims.z, smem_size);
-        
-        print(kernel_params);
-        
+        printf("\n(%d %d %d) : (%d %d %d) : (%d %d %d), smem: %d\n", cluster_dims.x, cluster_dims.y, cluster_dims.z, grid_dims.x, grid_dims.y, grid_dims.z, block_dims.x, block_dims.y, block_dims.z, smem_size);        
 
 
         
