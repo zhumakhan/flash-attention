@@ -176,6 +176,126 @@ void run_flash_fwd(Flash_fwd_params &params, cudaStream_t stream) {
     int smem_size_v = sizeof(decltype((typename CollectiveMainloop::TensorStorage{}).smem_v));
     printf("smem_size = %d, q = %d, k = %d, v = %d\n", smem_size, smem_size_q, smem_size_k, smem_size_v);
 
+    printf("--- MyStruct Contents ---\n");
+
+
+    // Pointers to Element (float)
+    printf("ptr_Q: ");
+    printf("(value at %d)\n", mainloop_args.ptr_Q == nullptr);
+
+    printf("shape_Q: "); print(mainloop_args.shape_Q); printf("\n"); // Calls print() for ShapeQKV
+    printf("stride_Q: "); print(mainloop_args.stride_Q); printf("\n"); // Calls print() for StrideQK
+
+    printf("ptr_K: ");
+    printf("(value at %d)\n", mainloop_args.ptr_K == nullptr);
+    
+    printf("shape_K: "); print(mainloop_args.shape_K); printf("\n"); // Calls print() for ShapeQKV
+    printf("stride_K: "); print(mainloop_args.stride_K); printf("\n"); // Calls print() for StrideQK
+
+    printf("ptr_V: ");
+    printf("(value at %d)\n", mainloop_args.ptr_V == nullptr);
+    
+    printf("headdim_v: %d\n", mainloop_args.headdim_v);
+    printf("stride_V: "); print(mainloop_args.stride_V); printf("\n"); // Calls print() for StrideV
+
+    printf("ptr_K_new: ");
+    printf("(value at %d)\n", mainloop_args.ptr_K_new==nullptr);
+    
+    printf("shape_K_new: "); print(mainloop_args.shape_K_new); printf("\n"); // Calls print() for ShapeQKV
+    printf("stride_K_new: "); print(mainloop_args.stride_K_new); printf("\n"); // Calls print() for StrideQK
+
+    printf("ptr_V_new: ");
+    printf("(value at %d)\n", mainloop_args.ptr_V_new == nullptr);
+    
+    printf("stride_V_new: "); print(mainloop_args.stride_V_new); printf("\n"); // Calls print() for StrideV
+
+    printf("ptr_Qv: ");
+    printf("(value at %d)\n", mainloop_args.ptr_Qv == nullptr);
+    
+    printf("stride_Qv: "); print(mainloop_args.stride_Qv); printf("\n"); // Calls print() for StrideQK
+
+    // Pointers to Element (float) for rotary
+    printf("ptr_rotary_cos: ");
+    printf("(value at %d)\n", mainloop_args.ptr_rotary_cos == nullptr);
+    
+    printf("shape_rotary: "); print(mainloop_args.shape_rotary); printf("\n"); // Calls print() for ShapeRotary
+    printf("stride_rotary_cos: "); print(mainloop_args.stride_rotary_cos); printf("\n"); // Calls print() for StrideRotary
+
+    printf("ptr_rotary_sin: ");
+    printf("(value at %d)\n", mainloop_args.ptr_rotary_sin == nullptr);
+    
+    printf("stride_rotary_sin: "); print(mainloop_args.stride_rotary_sin); printf("\n"); // Calls print() for StrideRotary
+    printf("is_rotary_interleaved: %s\n", mainloop_args.is_rotary_interleaved ? "true" : "false");
+
+    // Pointer to int for pagetable
+    printf("ptr_pagetable: ");
+    printf("(value at %d)\n", mainloop_args.ptr_pagetable == nullptr);
+    
+    printf("shape_pagetable: "); print(mainloop_args.shape_pagetable); printf("\n"); // Calls print() for ShapePageTable
+    printf("stride_pagetable: "); print(mainloop_args.stride_pagetable); printf("\n"); // Calls print() for StridePageTable
+
+    printf("softmax_scale: %f\n", mainloop_args.softmax_scale);
+
+    // Pointers to float for descale
+    printf("window_size_left: %d\n", mainloop_args.window_size_left);
+    printf("window_size_right: %d\n", mainloop_args.window_size_right);
+    printf("attention_chunk: %d\n", mainloop_args.attention_chunk);
+    printf("softcap_val: %f\n", mainloop_args.softcap_val);
+    printf("num_splits: %d\n", mainloop_args.num_splits);
+
+    // Pointers to int for various indices/lengths
+    printf("kv_batch_idx: ");
+    if (mainloop_args.kv_batch_idx) {
+        printf("%d (value at %p)\n", *mainloop_args.kv_batch_idx, (void*)mainloop_args.kv_batch_idx);
+    } else {
+        printf("nullptr\n");
+    }
+    printf("cu_seqlens_q: ");
+    if (mainloop_args.cu_seqlens_q) {
+        printf("%d (value at %p)\n", *mainloop_args.cu_seqlens_q, (void*)mainloop_args.cu_seqlens_q);
+    } else {
+        printf("nullptr\n");
+    }
+    printf("cu_seqlens_k: ");
+    if (mainloop_args.cu_seqlens_k) {
+        printf("%d (value at %p)\n", *mainloop_args.cu_seqlens_k, (void*)mainloop_args.cu_seqlens_k);
+    } else {
+        printf("nullptr\n");
+    }
+    printf("cu_seqlens_k_new: ");
+    if (mainloop_args.cu_seqlens_k_new) {
+        printf("%d (value at %p)\n", *mainloop_args.cu_seqlens_k_new, (void*)mainloop_args.cu_seqlens_k_new);
+    } else {
+        printf("nullptr\n");
+    }
+    printf("seqused_q: ");
+    if (mainloop_args.seqused_q) {
+        printf("%d (value at %p)\n", *mainloop_args.seqused_q, (void*)mainloop_args.seqused_q);
+    } else {
+        printf("nullptr\n");
+    }
+    printf("seqused_k: ");
+    if (mainloop_args.seqused_k) {
+        printf("%d (value at %p)\n", *mainloop_args.seqused_k, (void*)mainloop_args.seqused_k);
+    } else {
+        printf("nullptr\n");
+    }
+    printf("leftpad_k: ");
+    if (mainloop_args.leftpad_k) {
+        printf("%d (value at %p)\n", *mainloop_args.leftpad_k, (void*)mainloop_args.leftpad_k);
+    } else {
+        printf("nullptr\n");
+    }
+    printf("seqlens_rotary: ");
+    if (mainloop_args.seqlens_rotary) {
+        printf("%d (value at %p)\n", *mainloop_args.seqlens_rotary, (void*)mainloop_args.seqlens_rotary);
+    } else {
+        printf("nullptr\n");
+    }
+
+    printf("-------------------------\n");
+    
+    
     print(scheduler_args.num_blocks);
     print(scheduler_args.num_head);
     print(scheduler_args.num_batch);

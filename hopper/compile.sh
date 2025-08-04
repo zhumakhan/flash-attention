@@ -1,0 +1,1 @@
+g++ test.cpp -I/usr/local/cuda/include -L/usr/local/cuda/lib64/ -L/home/ubuntu/miniconda3/envs/py311/lib -lpython3.11  -lcudart  ./build/lib.linux-x86_64-cpython-311/flash_attn_3/_C.abi3.so
