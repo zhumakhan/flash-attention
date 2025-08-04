@@ -161,58 +161,6 @@ struct Flash_fwd_params : public Qkv_params {
     int num_sm;
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-struct Flash_bwd_params : public Flash_fwd_params {
-    using index_t = int64_t;
-
-    // The dO and dQKV matrices.
-    void *__restrict__ do_ptr;
-    void *__restrict__ dq_ptr;
-    void *__restrict__ dk_ptr;
-    void *__restrict__ dv_ptr;
-
-    // To accumulate dQ
-    void *__restrict__ dq_accum_ptr;
-    void *__restrict__ dk_accum_ptr;
-    void *__restrict__ dv_accum_ptr;
-
-    // // To accumulate dK and dV in case we're splitting the bwd along seqlen_q
-    // dimension void *__restrict__ dk_accum_ptr; void *__restrict__
-    // dv_accum_ptr;
-
-    // The stride between rows of the dO, dQ, dK and dV matrices.
-    index_t do_batch_stride;
-    index_t do_row_stride;
-    index_t do_head_stride;
-    index_t dq_batch_stride;
-    index_t dk_batch_stride;
-    index_t dv_batch_stride;
-    index_t dq_row_stride;
-    index_t dk_row_stride;
-    index_t dv_row_stride;
-    index_t dq_head_stride;
-    index_t dk_head_stride;
-    index_t dv_head_stride;
-
-    // The pointer to the softmax d sum.
-    void *__restrict__ dsoftmax_sum;
-    void *__restrict__ softmax_lse_log2_ptr;
-
-    int *__restrict__ dq_semaphore;
-    int *__restrict__ dk_semaphore;
-    int *__restrict__ dv_semaphore;
-
-    bool deterministic;
-    index_t dq_accum_split_stride;
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 template <int Arch, typename T, int kHeadDim, int kHeadDimV, bool Split, bool PagedKVNonTMA, bool Has_softcap, bool PackGQA>
 void run_mha_fwd_(Flash_fwd_params &params, cudaStream_t stream);
 void prepare_varlen_num_blocks(Flash_fwd_params &params, cudaStream_t stream, bool packgqa, int blockM, int blockN, bool enable_pdl);
-template <int Arch, typename T, int kHeadDim, bool Has_softcap>
-void run_mha_bwd_(Flash_bwd_params &params, cudaStream_t stream);
-template <typename T, typename Tpartial, int kBlockK>
-void run_mha_fwd_combine_(Flash_fwd_params &params, cudaStream_t stream, bool enable_pdl);

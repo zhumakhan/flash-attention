@@ -21,6 +21,7 @@
 #include "mainloop_fwd_sm90_tma_gmma_ws.hpp"
 #include "mainloop_fwd_sm80.hpp"
 #include "epilogue_fwd.hpp"
+#include <stdio.h>
 
 using namespace cute;
 
@@ -169,10 +170,17 @@ void run_flash_fwd(Flash_fwd_params &params, cudaStream_t stream) {
     dim3 grid_dims = AttnKernel::get_grid_shape(kernel_params);
     dim3 block_dims = AttnKernel::get_block_shape();
     int smem_size = AttnKernel::SharedStorageSize;
-    // int smem_size_q = sizeof(decltype((typename CollectiveMainloop::TensorStorage{}).smem_q));
-    // int smem_size_k = sizeof(decltype((typename CollectiveMainloop::TensorStorage{}).smem_k));
-    // int smem_size_v = sizeof(decltype((typename CollectiveMainloop::TensorStorage{}).smem_v));
-    // printf("smem_size = %d, q = %d, k = %d, v = %d\n", smem_size, smem_size_q, smem_size_k, smem_size_v);
+    
+    int smem_size_q = sizeof(decltype((typename CollectiveMainloop::TensorStorage{}).smem_q));
+    int smem_size_k = sizeof(decltype((typename CollectiveMainloop::TensorStorage{}).smem_k));
+    int smem_size_v = sizeof(decltype((typename CollectiveMainloop::TensorStorage{}).smem_v));
+    printf("smem_size = %d, q = %d, k = %d, v = %d\n", smem_size, smem_size_q, smem_size_k, smem_size_v);
+
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
     // Get the ptr to kernel function.
     if constexpr (size(ClusterShape{}) > 1) {
         void const* kernel = (void const*) cutlass::device_kernel<AttnKernel>;
@@ -180,6 +188,13 @@ void run_flash_fwd(Flash_fwd_params &params, cudaStream_t stream) {
             CHECK_CUDA(cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, smem_size));
         }
         dim3 cluster_dims(size<0>(ClusterShape{}), size<1>(ClusterShape{}), size<2>(ClusterShape{}));
+        printf("\n(%d %d %d) : (%d %d %d) : (%d %d %d), smem: %d\n", cluster_dims.x, cluster_dims.y, cluster_dims.z, grid_dims.x, grid_dims.y, grid_dims.z, block_dims.x, block_dims.y, block_dims.z, smem_size);
+        
+        print(kernel_params);
+        
+
+
+        
         cutlass::ClusterLaunchParams launch_params{grid_dims, block_dims, cluster_dims, smem_size, stream};
         cutlass::launch_kernel_on_cluster(launch_params, kernel, kernel_params);
     } else {
@@ -188,6 +203,8 @@ void run_flash_fwd(Flash_fwd_params &params, cudaStream_t stream) {
             CHECK_CUDA(cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, smem_size));
         }
         // kernel<<<grid_dims, block_dims, smem_size, stream>>>(kernel_params);
+        printf("\n(%d %d %d) : (%d %d %d), smem: %d\n", grid_dims.x, grid_dims.y, grid_dims.z, smem_size);
+
         cutlass::kernel_launch<AttnKernel>(grid_dims, block_dims, smem_size, stream, kernel_params,
                                            Arch >= 90 && Varlen && params.num_splits_dynamic_ptr && !params.skip_scheduler_metadata_computation /*launch_with_pdl*/);
     }

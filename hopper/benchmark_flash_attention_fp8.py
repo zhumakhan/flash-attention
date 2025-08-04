@@ -292,9 +292,9 @@ for causal in causal_vals:
                 softmax_scale, 
                 causal=causal,
                 window_size=(-1,-1),
-                descale_q=descale_q, 
-                descale_k=descale_k, 
-                descale_v=descale_v, 
+                q_descale=descale_q, 
+                k_descale=descale_k, 
+                v_descale=descale_v, 
                 repeats=repeats, 
                 verbose=False
             )
