@@ -54,7 +54,7 @@ void set_params_fprop(Flash_fwd_params &params,
     params.v_head_stride = d;
     params.v_dim_stride = 1;
     params.o_ptr = out;
-    params.o_row_stride = seqlen_q * d;
+    params.o_row_stride = h * d;
     params.o_head_stride = d;
 
     params.q_batch_stride = h * seqlen_q * d;
