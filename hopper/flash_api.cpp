@@ -32,13 +32,14 @@ void set_params_fprop(Flash_fwd_params &params,
                       void * k,
                       void * v,
                       void * out,
-                      void * softmax_lse_d
+                      void * softmax_lse_d,
+                      bool is_bf16 = false
                     ) {
 
     // Reset the parameters
     params = {};
 
-    params.is_bf16 = true;
+    params.is_bf16 = is_bf16;
     params.is_e4m3 = false;
 
     // Set the pointers and strides.
@@ -294,6 +295,7 @@ int mha_fwd(void * q,   // (b, s_q, h, d) or (total_q, h, d) if there is cu_seql
             const int seqlen_k,
             const int heads,
             const int dim,
+            bool is_bf16,
             cudaStream_t stream) {
     int total_q = batch_size * seqlen_q;
     int const num_pages = 0;
@@ -322,7 +324,7 @@ int mha_fwd(void * q,   // (b, s_q, h, d) or (total_q, h, d) if there is cu_seql
                      heads,
                      dim, head_size_rounded,
                      q, k, v, out,
-                     softmax_lse);
+                     softmax_lse, is_bf16);
 
     params.total_q = total_q;
     params.total_k = total_k;

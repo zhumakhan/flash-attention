@@ -12,4 +12,5 @@ int mha_fwd(void * q,   // (b, s_q, h, d) or (total_q, h, d) if there is cu_seql
             const int seqlen_k,
             const int heads,
             const int dim,
+            bool is_bf16,
             cudaStream_t stream);
