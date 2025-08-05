@@ -155,21 +155,21 @@ public:
         CUTLASS_TRACE_HOST("to_underlying_arguments(): Setting persistent grid SM count to " << sm_count);
 
         cutlass::KernelHardwareInfo hw_info{args.hw_info.device_id, sm_count};
-        printf("\nScheduler\n");
-        printf("\n num_blocks: %d\n", args.scheduler.num_blocks);
-        printf("\n num_head: %d\n", args.scheduler.num_head);
-        printf("\n num_batch: %d\n", args.scheduler.num_batch);
-        printf("\n num_splits: %d\n", args.scheduler.num_splits);
-        printf("\n qhead_per_khead: %d\n", args.scheduler.qhead_per_khead);
-        printf("\n seqlen: %d\n", args.scheduler.seqlen);
-        printf("\n seqlen_k: %d\n", args.scheduler.seqlen_k);
-        printf("\n headdim: %d\n", args.scheduler.headdim);
-        printf("\n headdim_v: %d\n", args.scheduler.headdim_v);
-        printf("\n element_size: %d\n", args.scheduler.element_size);
-        printf("\n is  tile_count_semaphore null: %d\n", args.scheduler.tile_count_semaphore == nullptr);
-        printf("\n is cu_seqlens null: %d\n", args.scheduler.cu_seqlens == nullptr);
-        printf("\n seqused is null: %d\n", args.scheduler.seqused == nullptr);
-        printf("\n num_splits_dynamic_ptr is null: %d\n", args.scheduler.num_splits_dynamic_ptr == nullptr);
+        // printf("\nScheduler\n");
+        // printf("\n num_blocks: %d\n", args.scheduler.num_blocks);
+        // printf("\n num_head: %d\n", args.scheduler.num_head);
+        // printf("\n num_batch: %d\n", args.scheduler.num_batch);
+        // printf("\n num_splits: %d\n", args.scheduler.num_splits);
+        // printf("\n qhead_per_khead: %d\n", args.scheduler.qhead_per_khead);
+        // printf("\n seqlen: %d\n", args.scheduler.seqlen);
+        // printf("\n seqlen_k: %d\n", args.scheduler.seqlen_k);
+        // printf("\n headdim: %d\n", args.scheduler.headdim);
+        // printf("\n headdim_v: %d\n", args.scheduler.headdim_v);
+        // printf("\n element_size: %d\n", args.scheduler.element_size);
+        // printf("\n is  tile_count_semaphore null: %d\n", args.scheduler.tile_count_semaphore == nullptr);
+        // printf("\n is cu_seqlens null: %d\n", args.scheduler.cu_seqlens == nullptr);
+        // printf("\n seqused is null: %d\n", args.scheduler.seqused == nullptr);
+        // printf("\n num_splits_dynamic_ptr is null: %d\n", args.scheduler.num_splits_dynamic_ptr == nullptr);
         
         return {
             CollectiveMainloop::to_underlying_arguments(args.mainloop),
@@ -183,14 +183,14 @@ public:
     static dim3
     get_grid_shape(Params const& params) {
         dim3 grid = TileScheduler::get_grid_shape(params.scheduler, params.hw_info.sm_count);
-        printf("\n grid: (%d, %d, %d)\n", grid.x, grid.y, grid.z);
+        // printf("\n grid: (%d, %d, %d)\n", grid.x, grid.y, grid.z);
         return grid;
     }
 
     static dim3
     get_block_shape() {
         dim3 block =  dim3(MaxThreadsPerBlock, 1, 1);
-        printf("\n grid: (%d, %d, %d)\n", block.x, block.y, block.z);
+        // printf("\n grid: (%d, %d, %d)\n", block.x, block.y, block.z);
         return block;
     }
 

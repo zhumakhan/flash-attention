@@ -1,10 +1,11 @@
 #include <cstdio>
+
 #include <cuda_runtime_api.h>
 #include "flash_api.h"
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>
-
 #include <cuda_runtime.h>
+
 #include <iostream>
 
 int main(){
@@ -38,5 +39,4 @@ int main(){
 
     mha_fwd(q,k,v,out,softmax_lse_ptr, batch_size, seqlen_q, seqlen_k, heads, dim, stream);
     cudaDeviceSynchronize();
-    printf("\nHere we go!\n");
 }

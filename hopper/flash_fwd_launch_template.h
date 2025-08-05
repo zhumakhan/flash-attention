@@ -171,145 +171,145 @@ void run_flash_fwd(Flash_fwd_params &params, cudaStream_t stream) {
     dim3 block_dims = AttnKernel::get_block_shape();
     int smem_size = AttnKernel::SharedStorageSize;
     
-    int smem_size_q = sizeof(decltype((typename CollectiveMainloop::TensorStorage{}).smem_q));
-    int smem_size_k = sizeof(decltype((typename CollectiveMainloop::TensorStorage{}).smem_k));
-    int smem_size_v = sizeof(decltype((typename CollectiveMainloop::TensorStorage{}).smem_v));
-    printf("smem_size = %d, q = %d, k = %d, v = %d\n", smem_size, smem_size_q, smem_size_k, smem_size_v);
+    // int smem_size_q = sizeof(decltype((typename CollectiveMainloop::TensorStorage{}).smem_q));
+    // int smem_size_k = sizeof(decltype((typename CollectiveMainloop::TensorStorage{}).smem_k));
+    // int smem_size_v = sizeof(decltype((typename CollectiveMainloop::TensorStorage{}).smem_v));
+    // printf("smem_size = %d, q = %d, k = %d, v = %d\n", smem_size, smem_size_q, smem_size_k, smem_size_v);
 
-    printf("--- MyStruct Contents ---\n");
+    // printf("--- MyStruct Contents ---\n");
 
 
-    // Pointers to Element (float)
-    printf("ptr_Q: ");
-    printf("(value at %d)\n", mainloop_args.ptr_Q == nullptr);
+    // // Pointers to Element (float)
+    // printf("ptr_Q: ");
+    // printf("(value at %d)\n", mainloop_args.ptr_Q == nullptr);
 
-    printf("shape_Q: "); print(mainloop_args.shape_Q); printf("\n"); // Calls print() for ShapeQKV
-    printf("stride_Q: "); print(mainloop_args.stride_Q); printf("\n"); // Calls print() for StrideQK
+    // printf("shape_Q: "); print(mainloop_args.shape_Q); printf("\n"); // Calls print() for ShapeQKV
+    // printf("stride_Q: "); print(mainloop_args.stride_Q); printf("\n"); // Calls print() for StrideQK
 
-    printf("ptr_K: ");
-    printf("(value at %d)\n", mainloop_args.ptr_K == nullptr);
+    // printf("ptr_K: ");
+    // printf("(value at %d)\n", mainloop_args.ptr_K == nullptr);
     
-    printf("shape_K: "); print(mainloop_args.shape_K); printf("\n"); // Calls print() for ShapeQKV
-    printf("stride_K: "); print(mainloop_args.stride_K); printf("\n"); // Calls print() for StrideQK
+    // printf("shape_K: "); print(mainloop_args.shape_K); printf("\n"); // Calls print() for ShapeQKV
+    // printf("stride_K: "); print(mainloop_args.stride_K); printf("\n"); // Calls print() for StrideQK
 
-    printf("ptr_V: ");
-    printf("(value at %d)\n", mainloop_args.ptr_V == nullptr);
+    // printf("ptr_V: ");
+    // printf("(value at %d)\n", mainloop_args.ptr_V == nullptr);
     
-    printf("headdim_v: %d\n", mainloop_args.headdim_v);
-    printf("stride_V: "); print(mainloop_args.stride_V); printf("\n"); // Calls print() for StrideV
+    // printf("headdim_v: %d\n", mainloop_args.headdim_v);
+    // printf("stride_V: "); print(mainloop_args.stride_V); printf("\n"); // Calls print() for StrideV
 
-    printf("ptr_K_new: ");
-    printf("(value at %d)\n", mainloop_args.ptr_K_new==nullptr);
+    // printf("ptr_K_new: ");
+    // printf("(value at %d)\n", mainloop_args.ptr_K_new==nullptr);
     
-    printf("shape_K_new: "); print(mainloop_args.shape_K_new); printf("\n"); // Calls print() for ShapeQKV
-    printf("stride_K_new: "); print(mainloop_args.stride_K_new); printf("\n"); // Calls print() for StrideQK
+    // printf("shape_K_new: "); print(mainloop_args.shape_K_new); printf("\n"); // Calls print() for ShapeQKV
+    // printf("stride_K_new: "); print(mainloop_args.stride_K_new); printf("\n"); // Calls print() for StrideQK
 
-    printf("ptr_V_new: ");
-    printf("(value at %d)\n", mainloop_args.ptr_V_new == nullptr);
+    // printf("ptr_V_new: ");
+    // printf("(value at %d)\n", mainloop_args.ptr_V_new == nullptr);
     
-    printf("stride_V_new: "); print(mainloop_args.stride_V_new); printf("\n"); // Calls print() for StrideV
+    // printf("stride_V_new: "); print(mainloop_args.stride_V_new); printf("\n"); // Calls print() for StrideV
 
-    printf("ptr_Qv: ");
-    printf("(value at %d)\n", mainloop_args.ptr_Qv == nullptr);
+    // printf("ptr_Qv: ");
+    // printf("(value at %d)\n", mainloop_args.ptr_Qv == nullptr);
     
-    printf("stride_Qv: "); print(mainloop_args.stride_Qv); printf("\n"); // Calls print() for StrideQK
+    // printf("stride_Qv: "); print(mainloop_args.stride_Qv); printf("\n"); // Calls print() for StrideQK
 
-    // Pointers to Element (float) for rotary
-    printf("ptr_rotary_cos: ");
-    printf("(value at %d)\n", mainloop_args.ptr_rotary_cos == nullptr);
+    // // Pointers to Element (float) for rotary
+    // printf("ptr_rotary_cos: ");
+    // printf("(value at %d)\n", mainloop_args.ptr_rotary_cos == nullptr);
     
-    printf("shape_rotary: "); print(mainloop_args.shape_rotary); printf("\n"); // Calls print() for ShapeRotary
-    printf("stride_rotary_cos: "); print(mainloop_args.stride_rotary_cos); printf("\n"); // Calls print() for StrideRotary
+    // printf("shape_rotary: "); print(mainloop_args.shape_rotary); printf("\n"); // Calls print() for ShapeRotary
+    // printf("stride_rotary_cos: "); print(mainloop_args.stride_rotary_cos); printf("\n"); // Calls print() for StrideRotary
 
-    printf("ptr_rotary_sin: ");
-    printf("(value at %d)\n", mainloop_args.ptr_rotary_sin == nullptr);
+    // printf("ptr_rotary_sin: ");
+    // printf("(value at %d)\n", mainloop_args.ptr_rotary_sin == nullptr);
     
-    printf("stride_rotary_sin: "); print(mainloop_args.stride_rotary_sin); printf("\n"); // Calls print() for StrideRotary
-    printf("is_rotary_interleaved: %s\n", mainloop_args.is_rotary_interleaved ? "true" : "false");
+    // printf("stride_rotary_sin: "); print(mainloop_args.stride_rotary_sin); printf("\n"); // Calls print() for StrideRotary
+    // printf("is_rotary_interleaved: %s\n", mainloop_args.is_rotary_interleaved ? "true" : "false");
 
-    // Pointer to int for pagetable
-    printf("ptr_pagetable: ");
-    printf("(value at %d)\n", mainloop_args.ptr_pagetable == nullptr);
+    // // Pointer to int for pagetable
+    // printf("ptr_pagetable: ");
+    // printf("(value at %d)\n", mainloop_args.ptr_pagetable == nullptr);
     
-    printf("shape_pagetable: "); print(mainloop_args.shape_pagetable); printf("\n"); // Calls print() for ShapePageTable
-    printf("stride_pagetable: "); print(mainloop_args.stride_pagetable); printf("\n"); // Calls print() for StridePageTable
+    // printf("shape_pagetable: "); print(mainloop_args.shape_pagetable); printf("\n"); // Calls print() for ShapePageTable
+    // printf("stride_pagetable: "); print(mainloop_args.stride_pagetable); printf("\n"); // Calls print() for StridePageTable
 
-    printf("softmax_scale: %f\n", mainloop_args.softmax_scale);
+    // printf("softmax_scale: %f\n", mainloop_args.softmax_scale);
 
-    // Pointers to float for descale
-    printf("window_size_left: %d\n", mainloop_args.window_size_left);
-    printf("window_size_right: %d\n", mainloop_args.window_size_right);
-    printf("attention_chunk: %d\n", mainloop_args.attention_chunk);
-    printf("softcap_val: %f\n", mainloop_args.softcap_val);
-    printf("num_splits: %d\n", mainloop_args.num_splits);
+    // // Pointers to float for descale
+    // printf("window_size_left: %d\n", mainloop_args.window_size_left);
+    // printf("window_size_right: %d\n", mainloop_args.window_size_right);
+    // printf("attention_chunk: %d\n", mainloop_args.attention_chunk);
+    // printf("softcap_val: %f\n", mainloop_args.softcap_val);
+    // printf("num_splits: %d\n", mainloop_args.num_splits);
 
-    // Pointers to int for various indices/lengths
-    printf("kv_batch_idx: ");
-    if (mainloop_args.kv_batch_idx) {
-        printf("%d (value at %p)\n", *mainloop_args.kv_batch_idx, (void*)mainloop_args.kv_batch_idx);
-    } else {
-        printf("nullptr\n");
-    }
-    printf("cu_seqlens_q: ");
-    if (mainloop_args.cu_seqlens_q) {
-        printf("%d (value at %p)\n", *mainloop_args.cu_seqlens_q, (void*)mainloop_args.cu_seqlens_q);
-    } else {
-        printf("nullptr\n");
-    }
-    printf("cu_seqlens_k: ");
-    if (mainloop_args.cu_seqlens_k) {
-        printf("%d (value at %p)\n", *mainloop_args.cu_seqlens_k, (void*)mainloop_args.cu_seqlens_k);
-    } else {
-        printf("nullptr\n");
-    }
-    printf("cu_seqlens_k_new: ");
-    if (mainloop_args.cu_seqlens_k_new) {
-        printf("%d (value at %p)\n", *mainloop_args.cu_seqlens_k_new, (void*)mainloop_args.cu_seqlens_k_new);
-    } else {
-        printf("nullptr\n");
-    }
-    printf("seqused_q: ");
-    if (mainloop_args.seqused_q) {
-        printf("%d (value at %p)\n", *mainloop_args.seqused_q, (void*)mainloop_args.seqused_q);
-    } else {
-        printf("nullptr\n");
-    }
-    printf("seqused_k: ");
-    if (mainloop_args.seqused_k) {
-        printf("%d (value at %p)\n", *mainloop_args.seqused_k, (void*)mainloop_args.seqused_k);
-    } else {
-        printf("nullptr\n");
-    }
-    printf("leftpad_k: ");
-    if (mainloop_args.leftpad_k) {
-        printf("%d (value at %p)\n", *mainloop_args.leftpad_k, (void*)mainloop_args.leftpad_k);
-    } else {
-        printf("nullptr\n");
-    }
-    printf("seqlens_rotary: ");
-    if (mainloop_args.seqlens_rotary) {
-        printf("%d (value at %p)\n", *mainloop_args.seqlens_rotary, (void*)mainloop_args.seqlens_rotary);
-    } else {
-        printf("nullptr\n");
-    }
+    // // Pointers to int for various indices/lengths
+    // printf("kv_batch_idx: ");
+    // if (mainloop_args.kv_batch_idx) {
+    //     printf("%d (value at %p)\n", *mainloop_args.kv_batch_idx, (void*)mainloop_args.kv_batch_idx);
+    // } else {
+    //     printf("nullptr\n");
+    // }
+    // printf("cu_seqlens_q: ");
+    // if (mainloop_args.cu_seqlens_q) {
+    //     printf("%d (value at %p)\n", *mainloop_args.cu_seqlens_q, (void*)mainloop_args.cu_seqlens_q);
+    // } else {
+    //     printf("nullptr\n");
+    // }
+    // printf("cu_seqlens_k: ");
+    // if (mainloop_args.cu_seqlens_k) {
+    //     printf("%d (value at %p)\n", *mainloop_args.cu_seqlens_k, (void*)mainloop_args.cu_seqlens_k);
+    // } else {
+    //     printf("nullptr\n");
+    // }
+    // printf("cu_seqlens_k_new: ");
+    // if (mainloop_args.cu_seqlens_k_new) {
+    //     printf("%d (value at %p)\n", *mainloop_args.cu_seqlens_k_new, (void*)mainloop_args.cu_seqlens_k_new);
+    // } else {
+    //     printf("nullptr\n");
+    // }
+    // printf("seqused_q: ");
+    // if (mainloop_args.seqused_q) {
+    //     printf("%d (value at %p)\n", *mainloop_args.seqused_q, (void*)mainloop_args.seqused_q);
+    // } else {
+    //     printf("nullptr\n");
+    // }
+    // printf("seqused_k: ");
+    // if (mainloop_args.seqused_k) {
+    //     printf("%d (value at %p)\n", *mainloop_args.seqused_k, (void*)mainloop_args.seqused_k);
+    // } else {
+    //     printf("nullptr\n");
+    // }
+    // printf("leftpad_k: ");
+    // if (mainloop_args.leftpad_k) {
+    //     printf("%d (value at %p)\n", *mainloop_args.leftpad_k, (void*)mainloop_args.leftpad_k);
+    // } else {
+    //     printf("nullptr\n");
+    // }
+    // printf("seqlens_rotary: ");
+    // if (mainloop_args.seqlens_rotary) {
+    //     printf("%d (value at %p)\n", *mainloop_args.seqlens_rotary, (void*)mainloop_args.seqlens_rotary);
+    // } else {
+    //     printf("nullptr\n");
+    // }
 
-    printf("-------------------------\n");
+    // printf("-------------------------\n");
     
     
-    print(scheduler_args.num_blocks);
-    print(scheduler_args.num_head);
-    print(scheduler_args.num_batch);
-    print(scheduler_args.num_splits);
-    print(scheduler_args.qhead_per_khead);
-    print(scheduler_args.seqlen);
-    print(scheduler_args.seqlen_k);
-    print(scheduler_args.headdim);
-    print(scheduler_args.headdim_v);
-    print(scheduler_args.element_size);
-    printf("\ntile_count_semaphore is null:\n %d", scheduler_args.tile_count_semaphore == nullptr);
-    printf("\ncu_seqlens is null:\n %d", scheduler_args.cu_seqlens == nullptr);
-    printf("\nseqused:\n %d", scheduler_args.seqused == nullptr);
-    printf("\nnum_splits_dynamic_ptr:\n %d", scheduler_args.num_splits_dynamic_ptr == nullptr);
+    // print(scheduler_args.num_blocks);
+    // print(scheduler_args.num_head);
+    // print(scheduler_args.num_batch);
+    // print(scheduler_args.num_splits);
+    // print(scheduler_args.qhead_per_khead);
+    // print(scheduler_args.seqlen);
+    // print(scheduler_args.seqlen_k);
+    // print(scheduler_args.headdim);
+    // print(scheduler_args.headdim_v);
+    // print(scheduler_args.element_size);
+    // printf("\ntile_count_semaphore is null:\n %d", scheduler_args.tile_count_semaphore == nullptr);
+    // printf("\ncu_seqlens is null:\n %d", scheduler_args.cu_seqlens == nullptr);
+    // printf("\nseqused:\n %d", scheduler_args.seqused == nullptr);
+    // printf("\nnum_splits_dynamic_ptr:\n %d", scheduler_args.num_splits_dynamic_ptr == nullptr);
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -322,7 +322,7 @@ void run_flash_fwd(Flash_fwd_params &params, cudaStream_t stream) {
             CHECK_CUDA(cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, smem_size));
         }
         dim3 cluster_dims(size<0>(ClusterShape{}), size<1>(ClusterShape{}), size<2>(ClusterShape{}));
-        printf("\n(%d %d %d) : (%d %d %d) : (%d %d %d), smem: %d\n", cluster_dims.x, cluster_dims.y, cluster_dims.z, grid_dims.x, grid_dims.y, grid_dims.z, block_dims.x, block_dims.y, block_dims.z, smem_size);        
+        // printf("\n(%d %d %d) : (%d %d %d) : (%d %d %d), smem: %d\n", cluster_dims.x, cluster_dims.y, cluster_dims.z, grid_dims.x, grid_dims.y, grid_dims.z, block_dims.x, block_dims.y, block_dims.z, smem_size);        
 
 
         
@@ -334,7 +334,7 @@ void run_flash_fwd(Flash_fwd_params &params, cudaStream_t stream) {
             CHECK_CUDA(cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, smem_size));
         }
         // kernel<<<grid_dims, block_dims, smem_size, stream>>>(kernel_params);
-        printf("\n(%d %d %d) : (%d %d %d), smem: %d\n", grid_dims.x, grid_dims.y, grid_dims.z, smem_size);
+        // printf("\n(%d %d %d) : (%d %d %d), smem: %d\n", grid_dims.x, grid_dims.y, grid_dims.z, smem_size);
 
         cutlass::kernel_launch<AttnKernel>(grid_dims, block_dims, smem_size, stream, kernel_params,
                                            Arch >= 90 && Varlen && params.num_splits_dynamic_ptr && !params.skip_scheduler_metadata_computation /*launch_with_pdl*/);
