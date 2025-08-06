@@ -58,7 +58,7 @@ struct PagedKVManager {
     using StridePageTable = cute::Stride<int64_t, _1>;
 
     using TensorPageTable = decltype(make_tensor(make_gmem_ptr(static_cast<int const*>(nullptr)), ShapePageTable{}, StridePageTable{})(int(0), _));
-    using TensorKV = decltype(make_tensor(make_gmem_ptr(static_cast<Element*>(nullptr)), ShapeKV{}, StrideKV{})(_, _, int(0), _));
+    using TensorKV = decltype(make_tensor(make_gmem_ptr(static_cast<Element const*>(nullptr)), ShapeKV{}, StrideKV{})(_, _, int(0), _));
     using GmemThrCopyKVCpAsync = decltype(GmemTiledCopyKVCpAsync{}.get_thread_slice(int(0)));
     using TensortKcK = decltype(GmemTiledCopyKVCpAsync{}.get_thread_slice(int(0)).partition_D(cute::make_identity_tensor(Shape<Int<kBlockN>, Int<kHeadDim>>{})));
     using TensortKpK = decltype(make_tensor<bool>(make_shape(size<1>(TensortKcK{}), size<2>(TensortKcK{})), Stride<_0, _1>{}));
@@ -74,7 +74,7 @@ struct PagedKVManager {
     static_assert(CUTE_STATIC_V(size<1>(TensortKcK{})) == CUTE_STATIC_V(size<1>(TensortVcV{})));
     static constexpr int kPageEntryPerThread = cute::ceil_div(size<1>(TensortKcK{}), kGmemThreadsPerRow);
     using TensorPageOffset = decltype(make_tensor<cute::tuple<int, int>>(Shape<Int<kPageEntryPerThread>>{}));
-    using TensorKVPtr = decltype(make_tensor<Element*>(Shape<Int<kPageEntryPerThread>>{}));
+    using TensorKVPtr = decltype(make_tensor<Element const*>(Shape<Int<kPageEntryPerThread>>{}));
 
     GmemTiledCopyKVCpAsync gmem_tiled_copy_kv;
     cutlass::FastDivmod const &page_size_divmod;
@@ -95,8 +95,8 @@ struct PagedKVManager {
     CUTLASS_DEVICE
     PagedKVManager(int const* const ptr_page_table_,
                    ShapePageTable const &shape_pagetable, StridePageTable const &stride_pagetable,
-                   Element* const ptr_K, ShapeKV const &shape_K, StrideKV const &stride_K,
-                   Element* const ptr_V, int const headdim_v, StrideKV const &stride_V,
+                   Element const* ptr_K, ShapeKV const &shape_K, StrideKV const &stride_K,
+                   Element const* ptr_V, int const headdim_v, StrideKV const &stride_V,
                    cutlass::FastDivmod const &page_size_divmod,
                    cutlass::FastDivmod const &blockN_per_page_size_divmod,
                    int const bidb, int const bidh, int const thread_idx, int const seqlen_k, int const leftpad_k,

@@ -28,9 +28,9 @@ void set_params_fprop(Flash_fwd_params &params,
                       const size_t d,
                       const int head_size_rounded,
                       // device pointers
-                      void * q,
-                      void * k,
-                      void * v,
+                      void const* q,
+                      void const* k,
+                      void const* v,
                       void * out,
                       void * softmax_lse_d,
                       bool is_bf16 = false
@@ -285,9 +285,9 @@ inline int round_up_headdimv(int head_size) {
 // h: num_heads
 // h_k: num_heads_k
 // d: head_size
-int mha_fwd(void * q,   // (b, s_q, h, d) or (total_q, h, d) if there is cu_seqlens_q
-            void * k,  // (b_k, s_k, h_k, d) or (total_k, h_k, d) if there is cu_seqlens_k or (num_pages, page_size, h_k, d) if there is page_table.
-            void * v,  // (b_k, s_k, h_k, dv) or (total_k, h_k, dv) if there is cu_seqlens_k or (num_pages, page_size, h_k, dv) if there is page_table.
+int mha_fwd(void const* q,   // (b, s_q, h, d) or (total_q, h, d) if there is cu_seqlens_q
+            void const* k,  // (b_k, s_k, h_k, d) or (total_k, h_k, d) if there is cu_seqlens_k or (num_pages, page_size, h_k, d) if there is page_table.
+            void const* v,  // (b_k, s_k, h_k, dv) or (total_k, h_k, dv) if there is cu_seqlens_k or (num_pages, page_size, h_k, dv) if there is page_table.
             void * out,  // (b, s_q, h, dv) or (total_q, h, dv) if there is cu_seqlens_q
             void * softmax_lse,
             const int batch_size,

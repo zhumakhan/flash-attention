@@ -92,11 +92,11 @@ void run_flash_fwd(Flash_fwd_params &params, cudaStream_t stream) {
         static_cast<Element const*>(params.q_ptr),
         {seqlen_q, params.d, params.h, batch_q},  // shape_Q
         {params.q_row_stride, _1{}, params.q_head_stride, !is_varlen_q ? params.q_batch_stride : 0},  // stride_Q
-        static_cast<Element*>(params.k_ptr),
+        static_cast<Element const*>(params.k_ptr),
         {!params.page_table ? (!is_varlen_k ? params.seqlen_k : params.total_k) : params.page_size,
          params.d, params.h_k, !params.page_table ? batch_k : params.num_pages},  // shape_K
         {params.k_row_stride, _1{}, params.k_head_stride, !is_varlen_k ? params.k_batch_stride : 0},  // stride_K
-        static_cast<Element*>(params.v_ptr),
+        static_cast<Element const*>(params.v_ptr),
         params.dv,  // headdim_v
         v_strides,  // stride_V
         static_cast<Element const*>(params.knew_ptr),

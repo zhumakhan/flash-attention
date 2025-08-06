@@ -360,10 +360,10 @@ struct CollectiveMainloopFwdSm90 {
         Element const* const ptr_Q;
         ShapeQKV const shape_Q;
         StrideQK const stride_Q;
-        Element* const ptr_K;  // not Element const* since we might append to KV cache in-place
+        Element const* ptr_K;  // not Element const* since we might append to KV cache in-place
         ShapeQKV const shape_K;
         StrideQK const stride_K;
-        Element* const ptr_V;
+        Element const* ptr_V;
         int32_t const headdim_v;
         StrideV const stride_V;
         Element const* const ptr_K_new;
@@ -405,10 +405,10 @@ struct CollectiveMainloopFwdSm90 {
         StrideQK const stride_Q;
         ShapeQPacked const shape_Q_packed;
         StrideQPacked const stride_Q_packed;
-        Element* const ptr_K;
+        Element const* ptr_K;
         ShapeQKV const shape_K;
         StrideQK const stride_K;
-        Element* const ptr_V;
+        Element const* ptr_V;
         int32_t const headdim_v;
         StrideV const stride_V;
         Element const* const ptr_K_new;
