@@ -33,7 +33,7 @@ with open("../README.md", "r", encoding="utf-8") as fh:
 # ninja build does not work unless include_dirs are abs path
 this_dir = os.path.dirname(os.path.abspath(__file__))
 
-PACKAGE_NAME = "flash_attn_3"
+PACKAGE_NAME = "flash_attn_3_orig"
 
 BASE_WHEEL_URL = "https://github.com/Dao-AILab/flash-attention/releases/download/{tag_name}/{wheel_name}"
 
@@ -55,10 +55,10 @@ DISABLE_FP16 = os.getenv("FLASH_ATTENTION_DISABLE_FP16", "FALSE") == "TRUE"
 DISABLE_FP8 = True#os.getenv("FLASH_ATTENTION_DISABLE_FP8", "FALSE") == "TRUE"
 DISABLE_VARLEN =  os.getenv("FLASH_ATTENTION_DISABLE_VARLEN", "FALSE") == "TRUE"
 DISABLE_CLUSTER = os.getenv("FLASH_ATTENTION_DISABLE_CLUSTER", "FALSE") == "TRUE"
-DISABLE_HDIM64 = True#os.getenv("FLASH_ATTENTION_DISABLE_HDIM64", "FALSE") == "TRUE"
-DISABLE_HDIM96 = True#os.getenv("FLASH_ATTENTION_DISABLE_HDIM96", "FALSE") == "TRUE"
+DISABLE_HDIM64 = os.getenv("FLASH_ATTENTION_DISABLE_HDIM64", "FALSE") == "TRUE"
+DISABLE_HDIM96 = os.getenv("FLASH_ATTENTION_DISABLE_HDIM96", "FALSE") == "TRUE"
 DISABLE_HDIM128 = os.getenv("FLASH_ATTENTION_DISABLE_HDIM128", "FALSE") == "TRUE"
-DISABLE_HDIM192 = True#os.getenv("FLASH_ATTENTION_DISABLE_HDIM192", "FALSE") == "TRUE"
+DISABLE_HDIM192 = os.getenv("FLASH_ATTENTION_DISABLE_HDIM192", "FALSE") == "TRUE"
 DISABLE_HDIM256 = True#os.getenv("FLASH_ATTENTION_DISABLE_HDIM256", "FALSE") == "TRUE"
 DISABLE_SM8x = True#os.getenv("FLASH_ATTENTION_DISABLE_SM80", "FALSE") == "TRUE"
 ENABLE_VCOLMAJOR = os.getenv("FLASH_ATTENTION_ENABLE_VCOLMAJOR", "FALSE") == "TRUE"
