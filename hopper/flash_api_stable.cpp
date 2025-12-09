@@ -16,6 +16,10 @@
 #include <torch/csrc/stable/library.h>
 #include <torch/csrc/stable/ops.h>
 #include <torch/csrc/stable/accelerator.h>
+#include <torch/csrc/inductor/aoti_torch/c/shim.h>
+
+// Declare the CUDA stream function that's behind #ifdef USE_CUDA in shim.h
+extern "C" AOTITorchError aoti_torch_get_current_cuda_stream(int32_t device_index, void** ret_stream);
 
 #include <torch/headeronly/core/ScalarType.h>
 #include <torch/headeronly/util/Exception.h>
@@ -26,8 +30,12 @@
 #include <mutex>
 
 using torch::stable::Tensor;
+namespace tsa = torch::stable::accelerator;
 
 namespace {
+inline tsa::DeviceGuard make_device_guard(const Tensor& t) {
+  return tsa::DeviceGuard(static_cast<tsa::DeviceIndex>(t.get_device()));
+}
 std::deque<std::once_flag> device_flags;
 std::vector<cudaDeviceProp> device_properties;
 
@@ -673,7 +681,7 @@ mha_fwd_get_scheduler_metadata(
 
     // Otherwise the kernel will be launched from cuda:0 device
     // Cast to char to avoid compiler warning about narrowing
-    torch::stable::accelerator::DeviceGuard device_guard{(char)seqused_k.get_device()};
+    auto device_guard = make_device_guard(seqused_k);
 
     // This needs to be set after get_num_splits
     Tensor tile_count_semaphore;  // Contains the semaphore and optionally num_splits_dynamic
@@ -713,7 +721,9 @@ mha_fwd_get_scheduler_metadata(
         int const kBlockM = params.arch >= 90 ? std::get<0>(kBlockMN_kernel_args_sm90) : std::get<0>(kBlockMN_kernel_args_sm8x);
         int const kBlockN = params.arch >= 90 ? std::get<1>(kBlockMN_kernel_args_sm90) : std::get<1>(kBlockMN_kernel_args_sm8x);
         auto device_idx = torch::stable::accelerator::getCurrentDeviceIndex();
-        auto stream = (cudaStream_t)torch::stable::accelerator::getCurrentStream(device_idx).id();
+        void* stream_ptr = nullptr;
+        TORCH_ERROR_CODE_CHECK(aoti_torch_get_current_cuda_stream(device_idx, &stream_ptr));
+        cudaStream_t stream = static_cast<cudaStream_t>(stream_ptr);
         prepare_varlen_num_blocks(params, stream, params.pack_gqa, kBlockM, kBlockN, false /*enable_pdl*/);
         CHECK_CUDA_KERNEL_LAUNCH();
     }
@@ -939,7 +949,7 @@ mha_fwd(Tensor q,   // (b, s_q, h, d) or (total_q, h, d) if there is cu_seqlens_
 
     // Otherwise the kernel will be launched from cuda:0 device
     // Cast to char to avoid compiler warning about narrowing
-    torch::stable::accelerator::DeviceGuard device_guard{(char)q.get_device()};
+    auto device_guard = make_device_guard(q);
 
     Tensor softmax_lse;
     if (!is_varlen_q) {
@@ -1223,7 +1233,9 @@ mha_fwd(Tensor q,   // (b, s_q, h, d) or (total_q, h, d) if there is cu_seqlens_
 
     if (total_q > 0 && (total_k + params.total_knew) > 0 && num_heads_k > 0) {
         auto device_idx = torch::stable::accelerator::getCurrentDeviceIndex();
-        auto stream = (cudaStream_t)torch::stable::accelerator::getCurrentStream(device_idx).id();
+        void* stream_ptr = nullptr;
+        TORCH_ERROR_CODE_CHECK(aoti_torch_get_current_cuda_stream(device_idx, &stream_ptr));
+        cudaStream_t stream = static_cast<cudaStream_t>(stream_ptr);
         run_mha_fwd(params, stream);
         if (params.num_splits > 1) {
             if (out_type == torch::headeronly::ScalarType::BFloat16) {
@@ -1323,7 +1335,7 @@ void run_mha_bwd(Flash_bwd_params &params, cudaStream_t stream) {
 // h: num_heads
 // h_k: num_heads_k
 // d: head_size
-std::tuple<Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor> mha_bwd(
+std::tuple<Tensor, Tensor, Tensor, Tensor, Tensor> mha_bwd(
     Tensor dout,  // (b, s_q, h, dv) or (total_q, h, dv) if there is cu_seqlens_q
     Tensor q,     // (b, s_q, h, d) or (total_q, h, d) if there is cu_seqlens_q
     Tensor k,     // (b, s_k, h_k, d) or (total_k, h_k, d) if there is cu_seqlens_k
@@ -1426,6 +1438,7 @@ std::tuple<Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor> mha_b
     int const arch = dprops->major * 10 + dprops->minor;
     int const head_size_rounded = round_up_headdim(std::max(head_size, head_size_v));
     int const head_size_v_rounded = head_size_rounded;
+    STD_TORCH_CHECK(!deterministic || head_size_rounded < 256, "Deterministic backward not supported for hdim 256.");
     // Very important that these match the kernel configs
     bool const is_local = (window_size_left >= 0 || window_size_right >= 0) && !is_causal;
     int const kBlockM_sm90 = head_size_rounded <= 64 ? (is_causal && softcap > 0.0 ? 96 : 128)
@@ -1527,7 +1540,7 @@ std::tuple<Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor> mha_b
 
     // Otherwise the kernel will be launched from cuda:0 device
     // Cast to char to avoid compiler warning about narrowing
-    torch::stable::accelerator::DeviceGuard device_guard{(char)q.get_device()};
+    auto device_guard = make_device_guard(q);
 
     // auto opts = q.options();
     // Need softmax_d to have total_q_padded_rounded since we want its address to be aligned by 16/8 bytes for TMA / LDG.64
@@ -1614,7 +1627,9 @@ std::tuple<Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor> mha_b
 
     if (total_q > 0 && total_k > 0 && num_heads_k > 0) {
         auto device_idx = torch::stable::accelerator::getCurrentDeviceIndex();
-        auto stream = (cudaStream_t)torch::stable::accelerator::getCurrentStream(device_idx).id();
+        void* stream_ptr = nullptr;
+        TORCH_ERROR_CODE_CHECK(aoti_torch_get_current_cuda_stream(device_idx, &stream_ptr));
+        cudaStream_t stream = static_cast<cudaStream_t>(stream_ptr);
         run_mha_bwd(params, stream);
     } else if (total_k > 0 && num_heads_k > 0) {
         // If seqlen_q == 0, then we have an empty tensor. We need to set the output to 0.
@@ -1626,7 +1641,7 @@ std::tuple<Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor> mha_b
         torch::stable::zero_(softmax_d);
     }
 
-    return { dq, dk, dv, softmax_d, softmax_lse_log2, dq_accum, dk_accum, dv_accum };
+    return { softmax_d, softmax_lse_log2, dq_accum, dk_accum, dv_accum };
 }
 
 std::tuple<Tensor, Tensor>
@@ -1690,7 +1705,7 @@ mha_combine(Tensor out_partial,         // num_splits x batch_size x seqlen x nu
 
     // Otherwise the kernel will be launched from cuda:0 device
     // Cast to char to avoid compiler warning about narrowing
-    torch::stable::accelerator::DeviceGuard device_guard{(char)out_partial.get_device()};
+    auto device_guard = make_device_guard(out_partial);
 
     auto softmax_lse = torch::stable::new_empty(out_partial, {batch_size, num_heads, seqlen}, std::make_optional(torch::headeronly::ScalarType::Float));
     softmax_lse = torch::stable::transpose(softmax_lse, 1, 2);
@@ -1721,7 +1736,9 @@ mha_combine(Tensor out_partial,         // num_splits x batch_size x seqlen x nu
 
     if (seqlen > 0 && batch_size > 0) {
         auto device_idx = torch::stable::accelerator::getCurrentDeviceIndex();
-        auto stream = (cudaStream_t)torch::stable::accelerator::getCurrentStream(device_idx).id();
+        void* stream_ptr = nullptr;
+        TORCH_ERROR_CODE_CHECK(aoti_torch_get_current_cuda_stream(device_idx, &stream_ptr));
+        cudaStream_t stream = static_cast<cudaStream_t>(stream_ptr);
         run_mha_fwd_combine(params, stream, false /*enable_pdl*/);
     }
 
@@ -1811,16 +1828,13 @@ void boxed_mha_bwd(
     auto deterministic = to<bool>(stack[20]);
     auto sm_margin = to<int64_t>(stack[21]);
 
-    auto [dq_, dk_, dv_, softmax_d, softmax_lse_log2, dq_accum, dk_accum, dv_accum] = mha_bwd(dout, q, k, v, out, softmax_lse, dq, dk, dv, cu_seqlens_q, cu_seqlens_k, seqused_q, seqused_k, max_seqlen_q, max_seqlen_k, softmax_scale, is_causal, window_size_left, window_size_right, softcap, deterministic, sm_margin);
+    auto [softmax_d, softmax_lse_log2, dq_accum, dk_accum, dv_accum] = mha_bwd(dout, q, k, v, out, softmax_lse, dq, dk, dv, cu_seqlens_q, cu_seqlens_k, seqused_q, seqused_k, max_seqlen_q, max_seqlen_k, softmax_scale, is_causal, window_size_left, window_size_right, softcap, deterministic, sm_margin);
 
-    stack[0] = from(dq_);
-    stack[1] = from(dk_);
-    stack[2] = from(dv_);
-    stack[3] = from(softmax_d);
-    stack[4] = from(softmax_lse_log2);
-    stack[5] = from(dq_accum);
-    stack[6] = from(dk_accum);
-    stack[7] = from(dv_accum);
+    stack[0] = from(softmax_d);
+    stack[1] = from(softmax_lse_log2);
+    stack[2] = from(dq_accum);
+    stack[3] = from(dk_accum);
+    stack[4] = from(dv_accum);
 }
 
 void boxed_mha_combine(
@@ -1932,7 +1946,7 @@ STABLE_TORCH_LIBRARY(flash_attn_3, m) {
         "int window_size_right = -1,"
         "float softcap = 0.0,"
         "bool deterministic = False,"
-        "int sm_margin = 0) -> (Tensor(dq!), Tensor(dk!), Tensor(dv!), Tensor, Tensor, Tensor, Tensor, Tensor)");
+        "int sm_margin = 0) -> (Tensor, Tensor, Tensor, Tensor, Tensor)");
     m.def("fwd_combine("
         "Tensor out_partial,"
         "Tensor lse_partial,"
