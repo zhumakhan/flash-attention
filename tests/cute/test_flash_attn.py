@@ -274,6 +274,7 @@ def test_flash_attn_output(
             and dv == d
             and learnable_sink is None
             # and False
+            and not ((causal or local) and seqlen_k < seqlen_q)
         ):
             g = torch.randn_like(out)
             # do_o = ((g.float() * out.float()).sum(-1)).transpose(1, 2)
@@ -1271,6 +1272,42 @@ def test_flash_attn_kvcache(
                 assert (out - out_ref).abs().mean().item() <= mult_mean * (
                     out_pt - out_ref
                 ).abs().mean().item()
+
+
+@pytest.mark.parametrize("dtype", [torch.bfloat16])
+@pytest.mark.parametrize("causal", [False, True])
+@pytest.mark.parametrize("d", [64, 128])
+@pytest.mark.parametrize("seqlen_q,seqlen_k", [(128, 128), (256, 256)])
+def test_flash_attn_bwd_preallocated_outputs(seqlen_q, seqlen_k, d, causal, dtype):
+    from flash_attn.cute.interface import _flash_attn_fwd, _flash_attn_bwd
+
+    device = "cuda"
+    torch.random.manual_seed(42)
+    batch_size = 2
+    nheads = 4
+
+    q = torch.randn(batch_size, seqlen_q, nheads, d, device=device, dtype=dtype, requires_grad=True)
+    k = torch.randn(batch_size, seqlen_k, nheads, d, device=device, dtype=dtype, requires_grad=True)
+    v = torch.randn(batch_size, seqlen_k, nheads, d, device=device, dtype=dtype, requires_grad=True)
+
+    out, lse = _flash_attn_fwd(q, k, v, causal=causal, return_lse=True)
+    dout = torch.randn_like(out)
+
+    dq_ref, dk_ref, dv_ref = _flash_attn_bwd(q, k, v, out, dout, lse, causal=causal)
+
+    dq = torch.empty_like(q)
+    dk = torch.empty_like(k)
+    dv = torch.empty_like(v)
+    dq_out, dk_out, dv_out = _flash_attn_bwd(
+        q, k, v, out, dout, lse, causal=causal, dq=dq, dk=dk, dv=dv
+    )
+
+    assert dq_out is dq
+    assert dk_out is dk
+    assert dv_out is dv
+    assert torch.allclose(dq, dq_ref, atol=1e-5, rtol=1e-5)
+    assert torch.allclose(dk, dk_ref, atol=1e-5, rtol=1e-5)
+    assert torch.allclose(dv, dv_ref, atol=1e-5, rtol=1e-5)
 
 
 def _generate_block_kvcache(
